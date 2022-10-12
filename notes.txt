@@ -1,0 +1,64 @@
+what kind of info is needed for each drink?
+- for spirits
+    - name
+    - type (e.g., whiskey, vodka, nutty liqueurs)
+    - manufacturer
+    - tasting notes
+    - good paired with ...
+    - cocktails to make with
+    - alcohol content
+
+what types of drinks?
+- spirits
+    - does this include mixers? liquors and liqueurs?
+- cocktails
+    - this could include straight?
+- what about others? e.g., wines and beers
+
+other things?
+- bitters
+- garnishes
+- other things to mix, e.g., simple sugar, muddled sugar
+
+
+database (relational?)
+- spirits (specific types)
+    - id
+    - name
+    - manufacturer
+    - type
+    - subtype
+    - flavor profile
+    - ABV
+    - similar
+- liqueurs
+    - id
+    - name
+    - manufacturer
+    - type
+    - flavor profile
+    - ABV
+    - similar
+- bitters (specific types)
+    - id
+    - name
+    - manufacturer
+    -
+- garnishes
+    - id
+    - name
+- whiskeys; vodkas; brandies; etc. (maybe even subcategories, e.g., scotch, Irish, bourbon)
+    - id
+- cocktails
+    - id
+    - name
+    - history
+    - notes
+    - ingredients
+    - suggested specific ingredients
+    - recipe / instructions
+    - similar cocktails
+
+- ingredients
+    - id
+    - name
