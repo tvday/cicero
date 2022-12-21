@@ -2,8 +2,9 @@ package controllers
 
 import (
 	"api/models"
-	"fmt"
+	"context"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
 
@@ -33,172 +34,173 @@ type AddCocktailContentInput struct {
 // Route: /cocktails
 //
 // Get all cocktails from database
-func GetCocktails(c *gin.Context) {
+func (ctrl *PublicController) GetCocktails(ctx *gin.Context) {
 	var cocktails []models.Cocktail
 
-	err := models.DB.Model(&models.Cocktail{}).
-		Preload("Contents.Ingredient").
-		Find(&cocktails).
-		Error
+	cur, err := ctrl.CocktailsCollection.Find(context.TODO(), primitive.M{})
 
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktails})
+	if err = cur.All(context.TODO(), &cocktails); err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": cocktails})
 }
 
-// GetCocktailById
+//// GetCocktailById
+////
+//// Method: GET
+////
+//// Route: /cocktails/:id
+////
+//// Find a cocktail by id
+//func GetCocktailById(c *gin.Context) {
+//	var cocktail models.Cocktail
 //
-// Method: GET
+//	err := models.DB.Model(&models.Cocktail{}).
+//		Preload("Contents.Ingredient").
+//		Where("id = ?", c.Param("id")).
+//		First(&cocktail).Error
 //
-// Route: /cocktails/:id
+//	//err := models.DB.Where("id =?", c.Param("id")).First(&cocktail).Error
 //
-// Find a cocktail by id
-func GetCocktailById(c *gin.Context) {
-	var cocktail models.Cocktail
-
-	err := models.DB.Model(&models.Cocktail{}).
-		Preload("Contents.Ingredient").
-		Where("id = ?", c.Param("id")).
-		First(&cocktail).Error
-
-	//err := models.DB.Where("id =?", c.Param("id")).First(&cocktail).Error
-
-	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
-		return
-	}
-
-	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
-}
-
-// PostCocktail
+//	if err != nil {
+//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
+//		return
+//	}
 //
-// Method: POST
+//	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
+//}
 //
-// Route: /cocktails
+//// PostCocktail
+////
+//// Method: POST
+////
+//// Route: /cocktails
+////
+//// Create a new cocktail
+//func PostCocktail(c *gin.Context) {
+//	// Validate input
+//	var input CreateCocktailInput
+//	if err := c.ShouldBindJSON(&input); err != nil {
+//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//		return
+//	}
 //
-// Create a new cocktail
-func PostCocktail(c *gin.Context) {
-	// Validate input
-	var input CreateCocktailInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	var contents []models.CocktailContent
-	for _, content := range input.Contents {
-		var ingredient models.Ingredient
-		if err := models.DB.Where("id =?", content.IngredientID).First(&ingredient).Error; err != nil {
-			c.IndentedJSON(http.StatusBadRequest,
-				gin.H{"error": fmt.Sprintf("Ingredient %v not found", content.IngredientID)})
-			return
-		}
-		contents = append(contents, models.CocktailContent{
-			IngredientID: *content.IngredientID,
-			Ingredient:   ingredient,
-			Amount:       *content.Amount,
-			Measurement:  content.Measurement,
-		})
-	}
-
-	// create ingredient
-	cocktail := models.Cocktail{
-		Name:     input.Name,
-		History:  input.History,
-		Recipe:   input.Recipe,
-		Contents: contents,
-	}
-	models.DB.Create(&cocktail)
-
-	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
-}
-
-// UpdateCocktailById
+//	var contents []models.CocktailContent
+//	for _, content := range input.Contents {
+//		var ingredient models.Ingredient
+//		if err := models.DB.Where("id =?", content.IngredientID).First(&ingredient).Error; err != nil {
+//			c.IndentedJSON(http.StatusBadRequest,
+//				gin.H{"error": fmt.Sprintf("Ingredient %v not found", content.IngredientID)})
+//			return
+//		}
+//		contents = append(contents, models.CocktailContent{
+//			IngredientID: *content.IngredientID,
+//			Ingredient:   ingredient,
+//			Amount:       *content.Amount,
+//			Measurement:  content.Measurement,
+//		})
+//	}
 //
-// Method: PATCH
+//	// create ingredient
+//	cocktail := models.Cocktail{
+//		Name:     input.Name,
+//		History:  input.History,
+//		Recipe:   input.Recipe,
+//		Contents: contents,
+//	}
+//	models.DB.Create(&cocktail)
 //
-// Route: /cocktails/:id
+//	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
+//}
 //
-// Update a cocktail
-func UpdateCocktailById(c *gin.Context) {
-	// get model if exists
-	var cocktail models.Cocktail
-	if err := models.DB.Where("id = ?", c.Param("id")).First(&cocktail).Error; err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
-		return
-	}
-
-	// validate input
-	var input UpdateCocktailInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// patch object
-	models.DB.Model(&cocktail).Updates(input)
-
-	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
-}
-
-// DeleteCocktailById
+//// UpdateCocktailById
+////
+//// Method: PATCH
+////
+//// Route: /cocktails/:id
+////
+//// Update a cocktail
+//func UpdateCocktailById(c *gin.Context) {
+//	// get model if exists
+//	var cocktail models.Cocktail
+//	if err := models.DB.Where("id = ?", c.Param("id")).First(&cocktail).Error; err != nil {
+//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
+//		return
+//	}
 //
-// Method: DELETE
+//	// validate input
+//	var input UpdateCocktailInput
+//	if err := c.ShouldBindJSON(&input); err != nil {
+//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//		return
+//	}
 //
-// Route: /cocktails/:id
+//	// patch object
+//	models.DB.Model(&cocktail).Updates(input)
 //
-// Delete a cocktail
-func DeleteCocktailById(c *gin.Context) {
-	// get model if exists
-	var cocktail models.Cocktail
-	if err := models.DB.Where("id = ?", c.Param("id")).First(&cocktail).Error; err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
-		return
-	}
-
-	models.DB.Delete(&cocktail)
-	c.Status(http.StatusNoContent)
-}
-
-// AddCocktailContent
+//	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
+//}
 //
-// Method: POST
+//// DeleteCocktailById
+////
+//// Method: DELETE
+////
+//// Route: /cocktails/:id
+////
+//// Delete a cocktail
+//func DeleteCocktailById(c *gin.Context) {
+//	// get model if exists
+//	var cocktail models.Cocktail
+//	if err := models.DB.Where("id = ?", c.Param("id")).First(&cocktail).Error; err != nil {
+//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
+//		return
+//	}
 //
-// Route: /cocktails/:id
+//	models.DB.Delete(&cocktail)
+//	c.Status(http.StatusNoContent)
+//}
 //
-// Add an ingredient to a cocktail
-func AddCocktailContent(c *gin.Context) {
-	// get model if exists
-	var cocktail models.Cocktail
-	if err := models.DB.Where("id = ?", c.Param("id")).First(&cocktail).Error; err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "Record not found"})
-		return
-	}
-
-	// validate input
-	var input AddCocktailContentInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-
-	var ingredient models.Ingredient
-	if err := models.DB.Where("id = ?", input.IngredientID).First(&ingredient).Error; err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Ingredient %v not found", *input.IngredientID)})
-		return
-	}
-
-	content := models.CocktailContent{
-		CocktailID:   cocktail.ID,
-		IngredientID: ingredient.ID,
-		Ingredient:   ingredient,
-		Amount:       *input.Amount,
-		Measurement:  input.Measurement,
-	}
-
-	models.DB.Create(&content)
-
-	c.IndentedJSON(http.StatusOK, gin.H{"data": content})
-}
+//// AddCocktailContent
+////
+//// Method: POST
+////
+//// Route: /cocktails/:id
+////
+//// Add an ingredient to a cocktail
+//func AddCocktailContent(c *gin.Context) {
+//	// get model if exists
+//	var cocktail models.Cocktail
+//	if err := models.DB.Where("id = ?", c.Param("id")).First(&cocktail).Error; err != nil {
+//		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "Record not found"})
+//		return
+//	}
+//
+//	// validate input
+//	var input AddCocktailContentInput
+//	if err := c.ShouldBindJSON(&input); err != nil {
+//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//	}
+//
+//	var ingredient models.Ingredient
+//	if err := models.DB.Where("id = ?", input.IngredientID).First(&ingredient).Error; err != nil {
+//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Ingredient %v not found", *input.IngredientID)})
+//		return
+//	}
+//
+//	content := models.CocktailContent{
+//		CocktailID:   cocktail.ID,
+//		IngredientID: ingredient.ID,
+//		Ingredient:   ingredient,
+//		Amount:       *input.Amount,
+//		Measurement:  input.Measurement,
+//	}
+//
+//	models.DB.Create(&content)
+//
+//	c.IndentedJSON(http.StatusOK, gin.H{"data": content})
+//}

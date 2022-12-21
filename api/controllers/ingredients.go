@@ -1,21 +1,32 @@
 package controllers
 
 import (
+	"api/db"
 	"api/models"
+	"context"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
 
 type PostIngredientInput struct {
-	Category string `json:"category" binding:"required"`
-	Type     string `json:"type" binding:"required"`
-	Subtype  string `json:"subtype"`
+	Category   string   `json:"category" binding:"required"`
+	Type       string   `json:"type" binding:"required"`
+	Subtype    string   `json:"subtype"`
+	Brand      string   `json:"brand"`
+	Name       string   `json:"name"`
+	Abv        float64  `json:"abv"`
+	FlavorTags []string `json:"flavorTags"`
 }
 
 type PatchIngredientInput struct {
-	Category string `json:"category"`
-	Type     string `json:"type"`
-	Subtype  string `json:"subtype"`
+	Category   string   `json:"category"`
+	Type       string   `json:"type"`
+	Subtype    string   `json:"subtype"`
+	Brand      string   `json:"brand"`
+	Name       string   `json:"name"`
+	Abv        float64  `json:"abv"`
+	FlavorTags []string `json:"flavorTags"`
 }
 
 // GetIngredients
@@ -25,11 +36,20 @@ type PatchIngredientInput struct {
 // Route: /ingredients
 //
 // Get all ingredients from database
-func GetIngredients(c *gin.Context) {
+func (ctrl *PublicController) GetIngredients(ctx *gin.Context) {
 	var ingredients []models.Ingredient
-	models.DB.Find(&ingredients)
 
-	c.IndentedJSON(http.StatusOK, gin.H{"data": ingredients})
+	cur, err := ctrl.IngredientsCollection.Find(context.TODO(), primitive.M{})
+
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	if err = cur.All(context.TODO(), &ingredients); err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": ingredients})
 }
 
 // GetIngredientById
@@ -39,15 +59,14 @@ func GetIngredients(c *gin.Context) {
 // Route: /ingredients/:id
 //
 // Find an ingredient by id
-func GetIngredientById(c *gin.Context) {
+func (ctrl *PublicController) GetIngredientById(ctx *gin.Context) {
 	var ingredient models.Ingredient
 
-	if err := models.DB.Where("id =?", c.Param("id")).First(&ingredient).Error; err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
-		return
+	if err := db.CollectionFindByID(ctrl.IngredientsCollection, ctx.Param("id"), &ingredient); err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"data": ingredient})
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": ingredient})
 }
 
 // PostIngredient
@@ -57,23 +76,37 @@ func GetIngredientById(c *gin.Context) {
 // Route: /ingredients
 //
 // Create a new ingredient
-func PostIngredient(c *gin.Context) {
-	// Validate input
-	var input PostIngredientInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+func (ctrl *PublicController) PostIngredient(ctx *gin.Context) {
+	// validate input
+	var input models.Ingredient
+
+	if err := ctx.BindJSON(&input); err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// create ingredient
-	ingredient := models.Ingredient{
-		Category: input.Category,
-		Type:     input.Type,
-		Subtype:  input.Subtype,
+	inputError := InputError{}
+	if input.Category == "" {
+		inputError.Missing = append(inputError.Missing, "category")
 	}
-	models.DB.Create(&ingredient)
+	if input.Type == "" {
+		inputError.Missing = append(inputError.Missing, "type")
+	}
+	if len(inputError.Missing) != 0 {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": inputError.Error()})
+		return
+	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"data": ingredient})
+	// insert into db
+	rslt, err := ctrl.IngredientsCollection.InsertOne(context.TODO(), &input)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// get the id, return inserted object
+	input.ID = rslt.InsertedID.(primitive.ObjectID)
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": input})
 }
 
 // PatchIngredientById
@@ -83,25 +116,24 @@ func PostIngredient(c *gin.Context) {
 // Route: /ingredients/:id
 //
 // Update an ingredient
-func PatchIngredientById(c *gin.Context) {
-	// get model if exists
-	var ingredient models.Ingredient
-	if err := models.DB.Where("id = ?", c.Param("id")).First(&ingredient).Error; err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
-		return
-	}
+func (ctrl *PublicController) PatchIngredientById(ctx *gin.Context) {
+	ctx.Status(http.StatusNotImplemented)
 
-	// validate input
-	var input PatchIngredientInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// patch object
-	models.DB.Model(&ingredient).Updates(input)
-
-	c.IndentedJSON(http.StatusOK, gin.H{"data": ingredient})
+	//// get model if exists
+	//var ingredient models.Ingredient
+	//if err := db.CollectionFindByID(ctrl.IngredientsCollection, ctx.Param("id"), ingredient); err != nil {
+	//	ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//}
+	//
+	//var input models.Ingredient
+	//if err := ctx.BindJSON(&input); err != nil {
+	//	ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//	return
+	//}
+	//
+	//ctrl.IngredientsCollection.UpdateByID()
+	//
+	//ctx.IndentedJSON(http.StatusOK, gin.H{"data": ingredient})
 }
 
 // DeleteIngredientById
@@ -111,14 +143,24 @@ func PatchIngredientById(c *gin.Context) {
 // Route: /ingredients/:id
 //
 // Delete an ingredient
-func DeleteIngredientById(c *gin.Context) {
-	// get model if exists
-	var ingredient models.Ingredient
-	if err := models.DB.Where("id = ?", c.Param("id")).First(&ingredient).Error; err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
+func (ctrl *PublicController) DeleteIngredientById(ctx *gin.Context) {
+	id, err := primitive.ObjectIDFromHex(ctx.Param("id"))
+	if err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	models.DB.Delete(&ingredient)
-	c.Status(http.StatusNoContent)
+	result, err := ctrl.IngredientsCollection.DeleteOne(context.TODO(), primitive.M{"_id": id})
+	if err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// if model doesn't exist
+	if result.DeletedCount == 0 {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }

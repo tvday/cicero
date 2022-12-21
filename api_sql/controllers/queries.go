@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"api/models"
+	"api_sql/models"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
