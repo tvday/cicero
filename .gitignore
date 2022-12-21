@@ -31,7 +31,6 @@ go.work
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff
-<<<<<<< HEAD
 **/.idea/**/workspace.xml
 **/.idea/**/tasks.xml
 **/.idea/**/usage.statistics.xml
@@ -56,52 +55,17 @@ go.work
 # Gradle
 **/.idea/**/gradle.xml
 **/.idea/**/libraries
-=======
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/dictionaries
-.idea/**/shelf
-
-# AWS User-specific
-.idea/**/aws.xml
-
-# Generated files
-.idea/**/contentModel.xml
-
-# Sensitive or high-churn files
-.idea/**/dataSources/
-.idea/**/dataSources.ids
-.idea/**/dataSources.local.xml
-.idea/**/sqlDataSources.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-.idea/**/dbnavigator.xml
-
-# Gradle
-.idea/**/gradle.xml
-.idea/**/libraries
->>>>>>> 131acd9 (working on ingredients controllers)
 
 # Gradle and Maven with auto-import
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using
 # auto-import.
-<<<<<<< HEAD
 # **/.idea/artifacts
 # **/.idea/compiler.xml
 # **/.idea/jarRepositories.xml
 # **/.idea/modules.xml
 # **/.idea/*.iml
 # **/.idea/modules
-=======
-# .idea/artifacts
-# .idea/compiler.xml
-# .idea/jarRepositories.xml
-# .idea/modules.xml
-# .idea/*.iml
-# .idea/modules
->>>>>>> 131acd9 (working on ingredients controllers)
 # *.iml
 # *.ipr
 
@@ -109,11 +73,7 @@ go.work
 cmake-build-*/
 
 # Mongo Explorer plugin
-<<<<<<< HEAD
 **/.idea/**/mongoSettings.xml
-=======
-.idea/**/mongoSettings.xml
->>>>>>> 131acd9 (working on ingredients controllers)
 
 # File-based project format
 *.iws
@@ -122,27 +82,16 @@ cmake-build-*/
 out/
 
 # mpeltonen/sbt-idea plugin
-<<<<<<< HEAD
 **/.idea_modules/
-=======
-.idea_modules/
->>>>>>> 131acd9 (working on ingredients controllers)
 
 # JIRA plugin
 atlassian-ide-plugin.xml
 
 # Cursive Clojure plugin
-<<<<<<< HEAD
 **/.idea/replstate.xml
 
 # SonarLint plugin
 **/.idea/sonarlint/
-=======
-.idea/replstate.xml
-
-# SonarLint plugin
-.idea/sonarlint/
->>>>>>> 131acd9 (working on ingredients controllers)
 
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
@@ -151,33 +100,21 @@ crashlytics-build.properties
 fabric.properties
 
 # Editor-based Rest Client
-<<<<<<< HEAD
 **/.idea/httpRequests
 
 # Android studio 3.1+ serialized cache file
 **/.idea/caches/build_file_checksums.ser
-=======
-.idea/httpRequests
-
-# Android studio 3.1+ serialized cache file
-.idea/caches/build_file_checksums.ser
->>>>>>> 131acd9 (working on ingredients controllers)
 
 ### GoLand Patch ###
 # Comment Reason: https://github.com/joeblau/gitignore.io/issues/186#issuecomment-215987721
 
 # *.iml
 # modules.xml
-<<<<<<< HEAD
 # **/.idea/misc.xml
-=======
-# .idea/misc.xml
->>>>>>> 131acd9 (working on ingredients controllers)
 # *.ipr
 
 # Sonarlint plugin
 # https://plugins.jetbrains.com/plugin/7973-sonarlint
-<<<<<<< HEAD
 **/.idea/**/sonarlint/
 
 # SonarQube Plugin
@@ -201,31 +138,6 @@ fabric.properties
 # Azure Toolkit for IntelliJ plugin
 # https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij
 **/.idea/**/azureSettings.xml
-=======
-.idea/**/sonarlint/
-
-# SonarQube Plugin
-# https://plugins.jetbrains.com/plugin/7238-sonarqube-community-plugin
-.idea/**/sonarIssues.xml
-
-# Markdown Navigator plugin
-# https://plugins.jetbrains.com/plugin/7896-markdown-navigator-enhanced
-.idea/**/markdown-navigator.xml
-.idea/**/markdown-navigator-enh.xml
-.idea/**/markdown-navigator/
-
-# Cache file creation bug
-# See https://youtrack.jetbrains.com/issue/JBR-2257
-.idea/$CACHE_FILE$
-
-# CodeStream plugin
-# https://plugins.jetbrains.com/plugin/12206-codestream
-.idea/codestream.xml
-
-# Azure Toolkit for IntelliJ plugin
-# https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij
-.idea/**/azureSettings.xml
->>>>>>> 131acd9 (working on ingredients controllers)
 
 ### macOS ###
 # General
@@ -278,21 +190,12 @@ Temporary Items
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using
 # auto-import.
-<<<<<<< HEAD
 # **/.idea/artifacts
 # **/.idea/compiler.xml
 # **/.idea/jarRepositories.xml
 # **/.idea/modules.xml
 # **/.idea/*.iml
 # **/.idea/modules
-=======
-# .idea/artifacts
-# .idea/compiler.xml
-# .idea/jarRepositories.xml
-# .idea/modules.xml
-# .idea/*.iml
-# .idea/modules
->>>>>>> 131acd9 (working on ingredients controllers)
 # *.iml
 # *.ipr
 
@@ -323,11 +226,7 @@ Temporary Items
 
 # *.iml
 # modules.xml
-<<<<<<< HEAD
 # **/.idea/misc.xml
-=======
-# .idea/misc.xml
->>>>>>> 131acd9 (working on ingredients controllers)
 # *.ipr
 
 # Sonarlint plugin
