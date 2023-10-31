@@ -87,12 +87,14 @@ func (ctrl *PublicController) PostIngredient(ctx *gin.Context) {
 
 	inputError := InputError{}
 	if input.Category == "" {
-		inputError.Missing = append(inputError.Missing, "category")
+		inputError.AddMissingInput("category")
+	} else {
+		inputError.InvalidCategory = !models.IsValidCategory(input.Category)
 	}
 	if input.Type == "" {
-		inputError.Missing = append(inputError.Missing, "type")
+		inputError.AddMissingInput("type")
 	}
-	if len(inputError.Missing) != 0 {
+	if inputError.IsError() {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": inputError.Error()})
 		return
 	}

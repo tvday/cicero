@@ -12,7 +12,8 @@ type PublicController struct {
 }
 
 type InputError struct {
-	Missing []string
+	Missing         []string
+	InvalidCategory bool
 }
 
 func (e *InputError) Error() string {
@@ -20,5 +21,16 @@ func (e *InputError) Error() string {
 	for field := range e.Missing {
 		out += fmt.Sprintf("Missing required field %v.\n", field)
 	}
+	if e.InvalidCategory {
+		out += fmt.Sprintf("Invalid category provided.")
+	}
 	return out
+}
+
+func (e *InputError) AddMissingInput(s string) {
+	e.Missing = append(e.Missing, s)
+}
+
+func (e *InputError) IsError() bool {
+	return len(e.Missing) != 0 || e.InvalidCategory
 }

@@ -1,31 +1,13 @@
 package controllers
 
 import (
+	"api/db"
 	"api/models"
 	"context"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
-
-type CreateCocktailInput struct {
-	Name     string                    `json:"name" binding:"required"`
-	History  string                    `json:"history"`
-	Recipe   string                    `json:"recipe" binding:"required"`
-	Contents []AddCocktailContentInput `json:"contents"`
-}
-
-type UpdateCocktailInput struct {
-	Name    string `json:"name"`
-	History string `json:"history"`
-	Recipe  string `json:"recipe"`
-}
-
-type AddCocktailContentInput struct {
-	IngredientID *uint    `json:"ingredientID" binding:"required"`
-	Amount       *float64 `json:"amount" binding:"required"`
-	Measurement  string   `json:"measurement" binding:"required"`
-}
 
 // GetCocktails
 //
@@ -50,74 +32,63 @@ func (ctrl *PublicController) GetCocktails(ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusOK, gin.H{"data": cocktails})
 }
 
-//// GetCocktailById
-////
-//// Method: GET
-////
-//// Route: /cocktails/:id
-////
-//// Find a cocktail by id
-//func GetCocktailById(c *gin.Context) {
-//	var cocktail models.Cocktail
+// GetCocktailById
 //
-//	err := models.DB.Model(&models.Cocktail{}).
-//		Preload("Contents.Ingredient").
-//		Where("id = ?", c.Param("id")).
-//		First(&cocktail).Error
+// Method: GET
 //
-//	//err := models.DB.Where("id =?", c.Param("id")).First(&cocktail).Error
+// Route: /cocktails/:id
 //
-//	if err != nil {
-//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
-//		return
-//	}
+// Find a cocktail by id
+func (ctrl *PublicController) GetCocktailById(ctx *gin.Context) {
+	var cocktail models.Cocktail
+
+	if err := db.CollectionFindByID(ctrl.CocktailsCollection, ctx.Param("id"), &cocktail); err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Record not found"})
+		return
+	}
+
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
+}
+
+// PostCocktail
 //
-//	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
-//}
+// Method: POST
 //
-//// PostCocktail
-////
-//// Method: POST
-////
-//// Route: /cocktails
-////
-//// Create a new cocktail
-//func PostCocktail(c *gin.Context) {
-//	// Validate input
-//	var input CreateCocktailInput
-//	if err := c.ShouldBindJSON(&input); err != nil {
-//		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//		return
-//	}
+// Route: /cocktails
 //
-//	var contents []models.CocktailContent
-//	for _, content := range input.Contents {
-//		var ingredient models.Ingredient
-//		if err := models.DB.Where("id =?", content.IngredientID).First(&ingredient).Error; err != nil {
-//			c.IndentedJSON(http.StatusBadRequest,
-//				gin.H{"error": fmt.Sprintf("Ingredient %v not found", content.IngredientID)})
-//			return
-//		}
-//		contents = append(contents, models.CocktailContent{
-//			IngredientID: *content.IngredientID,
-//			Ingredient:   ingredient,
-//			Amount:       *content.Amount,
-//			Measurement:  content.Measurement,
-//		})
-//	}
-//
-//	// create ingredient
-//	cocktail := models.Cocktail{
-//		Name:     input.Name,
-//		History:  input.History,
-//		Recipe:   input.Recipe,
-//		Contents: contents,
-//	}
-//	models.DB.Create(&cocktail)
-//
-//	c.IndentedJSON(http.StatusOK, gin.H{"data": cocktail})
-//}
-//
+// Create a new cocktail
+func (ctrl *PublicController) PostCocktail(ctx *gin.Context) {
+	// Validate input
+	var input models.Cocktail
+	if err := ctx.BindJSON(&input); err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	inputError := InputError{}
+	if input.Name == "" {
+		inputError.AddMissingInput("name")
+	}
+	for _, content := range input.Contents {
+		inputError.InvalidCategory = !models.IsValidCategory(content.Category)
+		if inputError.InvalidCategory {
+			break
+		}
+	}
+	if inputError.IsError() {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": inputError.Error()})
+	}
+
+	result, err := ctrl.CocktailsCollection.InsertOne(context.TODO(), &input)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	input.ID = result.InsertedID.(primitive.ObjectID)
+
+	ctx.IndentedJSON(http.StatusOK, gin.H{"data": input})
+}
+
 //// UpdateCocktailById
 ////
 //// Method: PATCH
